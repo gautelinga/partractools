@@ -1,5 +1,10 @@
 from mpi4py import MPI
 import dolfin as df
+import os
+import numpy as np
+from itertools import product
+import matplotlib.tri as tri
+
 
 comm = MPI.COMM_WORLD
 
@@ -69,7 +74,7 @@ class PeriodicBC(df.SubDomain):
               and x[j] > self.x_max[j] - df.DOLFIN_EPS_LARGE) or
              (x[i] > self.x_max[i] - df.DOLFIN_EPS_LARGE
               and x[j] < self.x_min[j] + df.DOLFIN_EPS_LARGE))
-            for i, j in product(range(dim), range(dim))
+            for i, j in product(range(self.dim), range(self.dim))
         ])
 
     def map(self, x, y):
@@ -111,10 +116,15 @@ class Btm(df.SubDomain):
         super().__init__()
 
     def inside(self, x, on_bnd):
-        return on_bnd and x[1] < x_min[1] + df.DOLFIN_EPS_LARGE
+        return on_bnd and x[1] < self.x_min[1] + df.DOLFIN_EPS_LARGE
 
 
 def parse_element(string):
     if string[:-1] == "P":
         el = "Lagrange"
     return el, int(string[-1])
+
+
+def mesh2triang(mesh):
+    xy = mesh.coordinates()
+    return tri.Triangulation(xy[:, 0], xy[:, 1], mesh.cells())
