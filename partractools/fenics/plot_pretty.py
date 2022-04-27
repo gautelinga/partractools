@@ -6,12 +6,11 @@ import dolfin as df
 import numpy as np
 from mpi4py import MPI
 
-# from utils import Params
 from helpers import DolfinParams, Timestamps, mpi_max, mpi_min, PeriodicBC, parse_element, Btm
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Analyze flow field")
+    parser = argparse.ArgumentParser(description="Plot pretty flow field")
     parser.add_argument("input_file", type=str, help="Input")
     return parser.parse_args()
 
@@ -107,17 +106,11 @@ if __name__ == "__main__":
         #xdmff.write(u_, float(ts[i][0]))
     xdmff.close()
 
-    import matplotlib.pyplot as plt
-    import matplotlib.tri as tri
-
     for i in range(len(ts.ts)):
         tsi = ts[i]
 
         with df.HDF5File(mesh.mpi_comm(), tsi[1], "r") as h5f:
             h5f.read(u_, "u")
-
-        df.plot(u_)
-        plt.show()
 
         u_y = df.assemble(u_[1] * df.ds(1, domain=mesh, subdomain_data=facets))
 
@@ -126,7 +119,8 @@ if __name__ == "__main__":
         [bc.apply(A, b) for bc in bcs]
         df.solve(A, psi_.vector(), b, "gmres", "hypre_amg")
 
-
+        import matplotlib.pyplot as plt
+        import matplotlib.tri as tri
         xy = mesh.coordinates()
         triang = tri.Triangulation(xy[:, 0], xy[:, 1], mesh.cells())
         fig, ax = plt.subplots(1, 1)

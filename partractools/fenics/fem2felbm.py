@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import os
 from mpi4py import MPI
 import h5py
-import outcome
 
 comm = MPI.COMM_WORLD
 rank = comm.Get_rank()
