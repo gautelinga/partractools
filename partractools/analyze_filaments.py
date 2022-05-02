@@ -276,12 +276,13 @@ def main():
     print("mean: ", popt_mean)
     print("var:  ", popt_var)
 
-    plt.plot(tau[:N//2] * tfactor, np.log(r_mean[:N//2]))
-    plt.plot(tau[:N//2] * tfactor, lr_mean[:N//2])
-    plt.plot(tau[:N//2] * tfactor, lr_var[:N//2])
+    plt.plot(tau[:N//2] * tfactor, np.log(r_mean[:N//2]), label='log(<rho>)')
+    plt.plot(tau[:N//2] * tfactor, lr_mean[:N//2], label='<log(rho)>')
+    plt.plot(tau[:N//2] * tfactor, lr_var[:N//2], label='Var(log(rho))')
     plt.plot(tau[:N//2] * tfactor, tau[:N//2] * tfactor * popt_mean[0])
     plt.plot(tau[:N//2] * tfactor, tau[:N//2] * tfactor * popt_var[0])
 
+    plt.legend()
     plt.show()
 
     if args.show or args.save:

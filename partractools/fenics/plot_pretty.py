@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from helpers import DolfinParams, Timestamps, mpi_max, mpi_min, PeriodicBC, parse_element, Btm, mesh2triang
 
 
-
 def parse_args():
     parser = argparse.ArgumentParser(description="Plot pretty flow field")
     parser.add_argument("input_file", type=str, help="Input")
@@ -88,6 +87,7 @@ if __name__ == "__main__":
         #uv = u_.compute_vertex_values(mesh)
         #u = [uv[i * nv: (i+1) * nv] for i in range(dim)]
         #p = p_.compute_vertex_values(mesh)
+
         c = c_.compute_vertex_values(mesh)
 
         fig, ax = plt.subplots(1, 1)
@@ -102,5 +102,6 @@ if __name__ == "__main__":
         ax.tricontourf(triang, c, levels=levels, colors=colors)
 
         plt.savefig(os.path.join(imgfolder, "phase_{:06d}.png".format(i)))
+        plt.close()
         #plt.show()
 
