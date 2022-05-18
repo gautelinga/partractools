@@ -91,7 +91,11 @@ possible_fields = [["u", "Vector", "Node"],
                   ["dA", "Scalar", "Face"],
                   ["dA0", "Scalar", "Face"],
                   ["dl", "Scalar", "Edge"],
-                  ["dl0", "Scalar", "Edge"]]
+                  ["dl0", "Scalar", "Edge"],
+                  ["elong", "Scalar", "Edge"],
+                  ["logelong", "Scalar", "Edge"],
+                  ["doublings", "Scalar", "Edge"]
+                  ]
 
 def main():
     parser = argparse.ArgumentParser(description="Make xdmf from sheet or strip")

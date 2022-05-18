@@ -168,13 +168,16 @@ def main():
 
     for it0, t0 in enumerate(t_):
         dl0_ = []
+        n0_ = []
         for posf in posf_:
             posft, grp = posf[t0]
             with h5py.File(posft, "r") as h5f:
                 dl0 = np.array(h5f[grp + "/dl"][:, 0])/np.array(h5f[grp + "/dl0"][:, 0])
-
+                n0 = np.array(h5f[grp + "/doublings"][:, 0])
             dl0_.append(dl0)
+            n0_.append(n0)
         dl0 = np.hstack(dl0_)
+        n0 = np.hstack(n0_)
 
         for it1, t1 in enumerate(t_):
             if it1 < it0:
@@ -183,17 +186,22 @@ def main():
             if it1 % 10 == 0:
                 print("Computing rho(t1 | t0) where t1 = {} > t0 = {} \t\t({}/{})".format(t1, t0, len(t_)*it0 + it1, len(t_)**2))
 
-            dl_ = []
+            dl1_ = []
+            n1_ = []
             for posf in posf_:
                 posft, grp = posf[t1]
                 with h5py.File(posft, "r") as h5f:
                     dl1 = np.array(h5f[grp + "/dl"][:, 0])/np.array(h5f[grp + "/dl0"][:, 0])
-                dl_.append(dl1)
-            dl = np.hstack(dl_)
+                    n1 = np.array(h5f[grp + "/doublings"][:, 0])
+                dl1_.append(dl1)
+                n1_.append(n1)
+            dl1 = np.hstack(dl1_)
+            n1 = np.hstack(n1_)
 
-            rho = dl/dl0
-            logrho = np.log(rho)
+            #rho = 
+            logrho = np.log(dl1/dl0) + (n1 - n0) * np.log(2)
             logrho_[it1-it0].append(logrho)
+            rho = np.exp(logrho)
 
             rho_mean = rho.mean()
             rho_mean_[it1, it0] = rho_mean
@@ -250,7 +258,7 @@ def main():
         x_logrho, hist_logrho = calc_hist(logrho, logrho_mean, logrho_std,
                                           (logrho_mean - args.nstd*logrho_std, logrho_mean + args.nstd*logrho_std), args.nstd, args.bins)
         
-    if False:
+    #if False:
         if args.show or args.save:
             fig, ax2 = plt.subplots(1, 1)
 
