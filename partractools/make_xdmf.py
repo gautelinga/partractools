@@ -86,7 +86,7 @@ possible_fields = [["u", "Vector", "Node"],
                   ["p", "Scalar", "Node"],
                   ["rho", "Scalar", "Node"],
                   ["H", "Scalar", "Node"],
-                  ["tau", "Scalar", "Node"],
+                  ["t_loc", "Scalar", "Node"],
                   ["n", "Vector", "Node"],
                   ["dA", "Scalar", "Face"],
                   ["dA0", "Scalar", "Face"],
@@ -94,7 +94,8 @@ possible_fields = [["u", "Vector", "Node"],
                   ["dl0", "Scalar", "Edge"],
                   ["elong", "Scalar", "Edge"],
                   ["logelong", "Scalar", "Edge"],
-                  ["doublings", "Scalar", "Edge"]
+                  ["doublings", "Scalar", "Edge"],
+                  ["tau", "Scalar", "Edge"]
                   ]
 
 def main():

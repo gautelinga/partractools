@@ -167,17 +167,21 @@ def main():
     logrho_ = [[] for _ in t_]
 
     for it0, t0 in enumerate(t_):
-        dl0_ = []
-        n0_ = []
+        #dl0_ = []
+        #n0_ = []
+        logelong0_ = []
         for posf in posf_:
             posft, grp = posf[t0]
             with h5py.File(posft, "r") as h5f:
-                dl0 = np.array(h5f[grp + "/dl"][:, 0])/np.array(h5f[grp + "/dl0"][:, 0])
-                n0 = np.array(h5f[grp + "/doublings"][:, 0])
-            dl0_.append(dl0)
-            n0_.append(n0)
-        dl0 = np.hstack(dl0_)
-        n0 = np.hstack(n0_)
+                #dl0 = np.array(h5f[grp + "/dl"][:, 0])/np.array(h5f[grp + "/dl0"][:, 0])
+                #n0 = np.array(h5f[grp + "/doublings"][:, 0])
+                logelong0 = np.array(h5f[grp + "/logelong"][:, 0])
+            #dl0_.append(dl0)
+            #n0_.append(n0)
+            logelong0_.append(logelong0)
+        #dl0 = np.hstack(dl0_)
+        #n0 = np.hstack(n0_)
+        logelong0 = np.hstack(logelong0_)
 
         for it1, t1 in enumerate(t_):
             if it1 < it0:
@@ -186,21 +190,29 @@ def main():
             if it1 % 10 == 0:
                 print("Computing rho(t1 | t0) where t1 = {} > t0 = {} \t\t({}/{})".format(t1, t0, len(t_)*it0 + it1, len(t_)**2))
 
-            dl1_ = []
-            n1_ = []
+            #dl1_ = []
+            #n1_ = []
+            logelong1_ = []
             for posf in posf_:
                 posft, grp = posf[t1]
                 with h5py.File(posft, "r") as h5f:
-                    dl1 = np.array(h5f[grp + "/dl"][:, 0])/np.array(h5f[grp + "/dl0"][:, 0])
-                    n1 = np.array(h5f[grp + "/doublings"][:, 0])
-                dl1_.append(dl1)
-                n1_.append(n1)
-            dl1 = np.hstack(dl1_)
-            n1 = np.hstack(n1_)
+                    #dl1 = np.array(h5f[grp + "/dl"][:, 0])/np.array(h5f[grp + "/dl0"][:, 0])
+                    #n1 = np.array(h5f[grp + "/doublings"][:, 0])
+                    logelong1 = np.array(h5f[grp + "/logelong"][:, 0])
+                #dl1_.append(dl1)
+                #n1_.append(n1)
+                logelong1_.append(logelong1)
+            #dl1 = np.hstack(dl1_)
+            #n1 = np.hstack(n1_)
+            logelong1 = np.hstack(logelong1_)
 
             #rho = 
-            logrho = np.log(dl1/dl0) + (n1 - n0) * np.log(2)
+            logrho = logelong1 - logelong0 #0*np.log(dl1/dl0) + (n1 - n0) #* np.log(2)
+
+            if it0 != it1:
+                logrho = logrho[logrho != 0.0]
             logrho_[it1-it0].append(logrho)
+
             rho = np.exp(logrho)
 
             rho_mean = rho.mean()
