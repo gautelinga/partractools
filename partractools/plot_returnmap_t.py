@@ -3,7 +3,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
-from utils import Params
+from partractools.common.utils import Params
 
 
 def get_crossings(part_id, part_it0, it2t, it_max, Ly_):
