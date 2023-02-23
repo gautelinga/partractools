@@ -29,17 +29,22 @@ def find_params(folder):
 def parse_params(paramsfiles):
     params = dict()
     for t, paramsfile in paramsfiles.items():
-        params[t] = dict()
-        with open(paramsfile) as pf:
+        params[t] = parse_paramsfile(paramsfile)
+    return params
+
+
+def parse_paramsfile(paramsfile):
+    params = dict()
+    with open(paramsfile) as pf:
+        line = pf.readline()
+        cnt = 1
+        while line:
+            item = line.strip().split("=")
+            key = item[0]
+            val = item[1]
+            params[key] = val
             line = pf.readline()
-            cnt = 1
-            while line:
-                item = line.strip().split("=")
-                key = item[0]
-                val = item[1]
-                params[t][key] = val
-                line = pf.readline()
-                cnt += 1
+            cnt += 1
     return params
 
 
@@ -95,3 +100,61 @@ def get_folders(folder):
             paramsfiles = find_params(fullpath)
             folders.append(fullpath)
     return folders
+
+def get_first_one(d):
+    for key, val in d.items():
+        if len(val) == 1:
+            return key
+        print(len(val))
+    return key
+
+def get_h5data_location(folder):
+    files = os.listdir(folder)
+
+    posf = dict()
+    for file in files:
+        if file[:11] == "data_from_t" and file[-3:] == ".h5":
+            t = float(file[11:-3])
+            posft = os.path.join(folder, file)
+            try:
+                with h5py.File(posft, "r") as h5f:
+                    for cat in h5f:
+                        posf[float(cat)] = (posft, cat)
+            except:
+                pass
+    return posf
+
+def compute_lines(pts, edges):
+    """ edges = [(0, 1), (1, 2), (2, 0), (3, 4), (4, 5)] """
+    v2e = dict()
+    for iedge, edge in enumerate(edges):
+        for iv in edge:
+            if iv in v2e:
+                v2e[iv].add(iedge)
+            else:
+                v2e[iv] = set([iedge])
+
+    lines = []
+    while len(v2e):
+        line = []
+        iv0 = get_first_one(v2e)
+        next_edges = v2e.pop(iv0) #.pop()
+        while len(next_edges) > 1:
+            next_edges.pop()
+        iv = iv0
+        closed = False
+        while (len(next_edges) == 1):
+            ie = next_edges.pop()
+            next_nodes = set(edges[ie])
+            next_nodes.remove(iv)
+            assert(len(next_nodes) == 1)
+            iv_prev = iv
+            iv = next_nodes.pop()
+            line.append((iv_prev, iv, ie))
+            if iv == iv0:
+                closed = True
+                break
+            next_edges = set(v2e.pop(iv))
+            next_edges.remove(ie)
+        lines.append((line, closed))
+    return lines
