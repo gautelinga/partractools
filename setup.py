@@ -30,5 +30,6 @@ setuptools.setup(
     entry_points={"console_scripts": ["make_xdmf=partractools.make_xdmf:main",
                                       "analyze_elongation=partractools.analyze_elongation:main",
                                       "analyze_filaments=partractools.analyze_filaments:main",
-                                      "measure_exponents=partractools.measure_exponents:main"]},
+                                      "measure_exponents=partractools.measure_exponents:main",
+                                      "parallel_partrac=partractools.parallel_partrac:main"]},
 )
