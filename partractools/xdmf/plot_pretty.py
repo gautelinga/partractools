@@ -32,21 +32,20 @@ if __name__ == "__main__":
     with h5py.File(phi_file, "r") as h5f:
         xy = np.array(h5f["Mesh/0/mesh/geometry"])
         cells = np.array(h5f["Mesh/0/mesh/topology"])
+        t_ = [int(k) for k in h5f["VisualisationVector"].keys()]
     
     Lx = xy[:, 0].max()-xy[:, 0].min()
     Ly = xy[:, 1].max()-xy[:, 1].min()
 
     triang = tri.Triangulation(xy[:, 0], xy[:, 1], cells)
 
-    tsteps = [int(k) for k in h5f["VisualisationVector"].keys()]
-    tsteps = sorted(tsteps)[::args.skip]
+    t_ = sorted(t_)[::args.skip]
+    tsteps = list(enumerate(t_))
 
     levels = [-10, 0, 10]
     colors = ['#ffffff', '#a0c0ff']
 
     c = np.zeros(len(xy))
-
-    tsteps = list(enumerate(tsteps))
 
     for i, tstep in tsteps[mpi_rank::mpi_size]:
         with h5py.File(phi_file, "r") as h5f:
