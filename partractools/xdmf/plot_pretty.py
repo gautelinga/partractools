@@ -49,7 +49,7 @@ if __name__ == "__main__":
 
     for i, tstep in tsteps[mpi_rank::mpi_size]:
         if mpi_rank == 0:
-            print(i, tstep)
+            print(f"Step: {i}, Time = {tstep} / {t_[-1]}")
         with h5py.File(phi_file, "r") as h5f:
             c[:] = np.array(h5f["VisualisationVector/{}".format(tstep)]).flatten()
 
