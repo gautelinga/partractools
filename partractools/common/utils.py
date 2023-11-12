@@ -15,6 +15,9 @@ class Params:
 
     def get_tmin(self):
         return self.ts[-1]
+    
+    def exists(self):
+        return len(self.params_dict)
 
 
 def find_params(folder):
