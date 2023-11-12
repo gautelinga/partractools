@@ -6,6 +6,10 @@ from matplotlib import tri
 import h5py
 import numpy as np
 
+from mpi4py.MPI import COMM_WORLD
+mpi_rank = COMM_WORLD.Get_rank()
+mpi_size = COMM_WORLD.Get_size()
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Plot pretty flow field")
@@ -23,10 +27,12 @@ if __name__ == "__main__":
     if not os.path.exists(imgfolder):
         os.makedirs(imgfolder)
 
-    h5f = h5py.File(os.path.join(tsfolder, "phi_from_tstep_0.h5"), "r")
+    phi_file = os.path.join(tsfolder, "phi_from_tstep_0.h5")
+
+    with h5py.File(phi_file, "r") as h5f:
+        xy = np.array(h5f["Mesh/0/mesh/geometry"])
+        cells = np.array(h5f["Mesh/0/mesh/topology"])
     
-    xy = np.array(h5f["Mesh/0/mesh/geometry"])
-    cells = np.array(h5f["Mesh/0/mesh/topology"])
     Lx = xy[:, 0].max()-xy[:, 0].min()
     Ly = xy[:, 1].max()-xy[:, 1].min()
 
@@ -40,8 +46,11 @@ if __name__ == "__main__":
 
     c = np.zeros(len(xy))
 
-    for i, tstep in enumerate(tsteps):
-        c[:] = np.array(h5f["VisualisationVector/{}".format(tstep)]).flatten()
+    tsteps = list(enumerate(tsteps))
+
+    for i, tstep in tsteps[mpi_rank::mpi_size]:
+        with h5py.File(phi_file, "r") as h5f:
+            c[:] = np.array(h5f["VisualisationVector/{}".format(tstep)]).flatten()
 
         fig, ax = plt.subplots(1, 1, figsize=((args.size), (Ly/Lx * args.size)))
         ax.set_aspect("equal")
@@ -59,4 +68,4 @@ if __name__ == "__main__":
         plt.close()
         #plt.show()
 
-    h5f.close()
+    # h5f.close()
