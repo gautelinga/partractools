@@ -16,6 +16,8 @@ def parse_args():
     parser.add_argument("input_folder", type=str, help="Input folder")
     parser.add_argument("--skip", type=int, default=1, help="Skip")
     parser.add_argument("--size", type=float, default=4.0, help="Size")
+    parser.add_argument("--start", type=int, default=None, help="Start id")
+    parser.add_argument("--stop", type=int, default=None, help="Stop id")
     return parser.parse_args()
 
 
@@ -39,8 +41,12 @@ if __name__ == "__main__":
 
     triang = tri.Triangulation(xy[:, 0], xy[:, 1], cells)
 
-    t_ = sorted(t_)[::args.skip]
-    tsteps = list(enumerate(t_))
+    t_ = sorted(t_)
+
+    start = 0 if args.start is None else args.start
+    stop = len(t_) if args.stop is None else args.stop
+
+    tsteps = list(enumerate(t_))[start:stop:args.skip]
 
     levels = [-10, 0, 10]
     colors = ['#ffffff', '#a0c0ff']
