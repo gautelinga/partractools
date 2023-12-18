@@ -1,7 +1,123 @@
 import numpy as np
 import os
 import h5py
+from xml.etree import cElementTree as ET
+import mpi4py.MPI as MPI
+mpi_comm = MPI.COMM_WORLD
+mpi_rank = mpi_comm.Get_rank()
+mpi_size = mpi_comm.Get_size()
+mpi_root = mpi_rank == 0
 
+def mpi_print(*args):
+    if mpi_rank == 0:
+        print(*args)
+
+def mpi_max(x):
+    x_max_loc = np.array(x).max(axis=0)
+    x_max = np.zeros_like(x_max_loc)
+    mpi_comm.Allreduce(x_max_loc, x_max, op=MPI.MAX)
+    return x_max
+
+def mpi_min(x):
+    x_min_loc = np.array(x).min(axis=0)
+    x_min = np.zeros_like(x_min_loc)
+    mpi_comm.Allreduce(x_min_loc, x_min, op=MPI.MIN)
+    return x_min
+
+def mpi_sum(data):
+    data = mpi_comm.gather(data, root=0)
+    if mpi_root:
+        data = sum(data)
+    else:
+        data = 0    
+    return data
+
+class GenParams():
+    def __init__(self, input_file=None, required=False):
+        self.prm = dict()
+        if input_file is not None:
+            self.load(input_file, required=required)
+
+    def load(self, input_file, required=False):
+        if not os.path.exists(input_file) and required:
+            mpi_print(f"No such parameters file: {input_file}")
+            exit()
+        if os.path.exists(input_file):
+            with open(input_file, "r") as infile:
+                for el in infile.read().split("\n"):
+                    if "=" in el:
+                        key, val = el.split("=")
+                        if val in ["true", "TRUE"]:
+                            val = "True"
+                        elif val in ["false", "FALSE"]:
+                            val = "False"
+                        try:
+                            self.prm[key] = eval(val)
+                        except:
+                            self.prm[key] = val
+
+    def dump(self, output_file):
+        with open(output_file, "w") as ofile:      
+            ofile.write("\n".join([f"{key}={val}" for key, val in self.prm.items()]))
+
+    def __getitem__(self, key):
+        if key in self.prm:
+            return self.prm[key]
+        else:
+            mpi_print("No such parameter: {}".format(key))
+            exit()
+            #return None
+
+    def __setitem__(self, key, val):
+        self.prm[key] = val
+
+    def __str__(self):
+        string = "\n".join(["{}: {}".format(key, val) for key, val in self.prm.items()])
+        return string
+    
+    def __contains__(self, key):
+        return key in self.prm
+
+def parse_xdmf(xml_file, get_mesh_address=False):
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    basedir = os.path.dirname(xml_file)
+
+    dsets = []
+    timestamps = []
+
+    geometry_found = not get_mesh_address
+    topology_found = not get_mesh_address
+
+    for i, step in enumerate(root[0][0]):
+        if step.tag == "Time":
+            # Support for earlier dolfin formats
+            timestamps = [float(time) for time in
+                          step[0].text.strip().split(" ")]
+        elif step.tag == "Grid":
+            timestamp = None
+            dset_address = None
+            for prop in step:
+                if prop.tag == "Time":
+                    timestamp = float(prop.attrib["Value"])
+                elif prop.tag == "Attribute":
+                    dset_address = prop[0].text.split(":") # [1]
+                    dset_address[0] = os.path.join(basedir, dset_address[0])
+                elif not topology_found and prop.tag == "Topology":
+                    topology_address = prop[0].text.split(":")
+                    topology_address[0] = os.path.join(basedir, topology_address[0])
+                    topology_found = True
+                elif not geometry_found and prop.tag == "Geometry":
+                    geometry_address = prop[0].text.split(":")
+                    geometry_address[0] = os.path.join(basedir, geometry_address[0])
+                    geometry_found = True
+            if timestamp is None:
+                timestamp = timestamps[i-1]
+            dsets.append((timestamp, dset_address))
+    if get_mesh_address and topology_found and geometry_found:
+        return (dsets, topology_address, geometry_address)
+    return dsets
 
 class Params:
     def __init__(self, folder):
@@ -18,7 +134,15 @@ class Params:
     
     def exists(self):
         return len(self.params_dict)
-
+    
+    def __str__(self) -> str:
+        string = ""
+        for key, val in self.params_dict.items():
+            string += f"{key}: {val}\n"
+        return string
+    
+    def __getitem__(self, key):
+        return self.get(key, self.ts[0])
 
 def find_params(folder):
     paramsfiles = dict()
@@ -93,7 +217,7 @@ def get_folders(folder):
     paramsfiles = find_params(folder)
 
     if len(paramsfiles) == 0:
-        subfolders = [] 
+        subfolders = []
         for a in os.listdir(folder):
             if a.isdigit():
                 subfolders.append(a)
@@ -108,7 +232,7 @@ def get_first_one(d):
     for key, val in d.items():
         if len(val) == 1:
             return key
-        print(len(val))
+        #print(len(val))
     return key
 
 def get_h5data_location(folder):

@@ -4,7 +4,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import h5py
-from utils import Params
+from partractools.common.utils import Params
 from make_xdmf import header, grid_begin, grid_end, mesh_edge,\
     attrib_scalar_node, footer, timestamp, attrib_vector_node, mesh_face_quad
 
