@@ -14,11 +14,12 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Plot pretty Lagrangian and Eulerian dynamics")
     parser.add_argument("input_folder", type=str, help="Input folder")
     parser.add_argument("--skip", type=int, default=1, help="Skip")
-    parser.add_argument("--size", type=float, default=4.0, help="Size")
+    parser.add_argument("--size", type=float, default=20.0, help="Size")
     parser.add_argument("--start", type=int, default=None, help="Start id")
     parser.add_argument("--stop", type=int, default=None, help="Stop id")
     parser.add_argument("-s0", type=float, default=3.0, help="Initial thickness (if applicable)")
     parser.add_argument("--arrows", action="store_true", help="Plot with arrows (if applicable)")
+    parser.add_argument("--phasesep", action="store_true", help="Separate solute in phases")
     return parser.parse_args()
 
 def trim_path(path):
