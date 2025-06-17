@@ -99,7 +99,9 @@ possible_fields = [["u", "Vector", "Node"],
                   ["logelong", "Scalar", "Edge"],
                   ["doublings", "Scalar", "Edge"],
                   ["tau", "Scalar", "Edge"],
-                  ["cell_type", "Scalar", "Node"]
+                  ["tau", "Scalar", "Node"],
+                  ["cell_type", "Scalar", "Node"],
+                  ["J", "Tensor", "Node"]
                   ]
 
 def main():
