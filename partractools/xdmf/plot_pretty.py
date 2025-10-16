@@ -6,7 +6,7 @@ from matplotlib import tri
 import h5py
 import numpy as np
 
-from partractools.common.utils import GenParams, mpi_root, mpi_rank, mpi_size, parse_xdmf, get_first_one, mpi_min, mpi_max
+from partractools.common.utils import GenParams, mpi_root, mpi_rank, mpi_size, parse_xdmf, get_first_one, mpi_min, mpi_max, mpi_comm
 
 
 def parse_args():
@@ -24,8 +24,9 @@ if __name__ == "__main__":
 
     tsfolder = os.path.join(args.input_folder, "Timeseries")
     imgfolder = os.path.join(tsfolder, "Images")
-    if not os.path.exists(imgfolder):
+    if mpi_root and not os.path.exists(imgfolder):
         os.makedirs(imgfolder)
+    mpi_comm.Barrier()
 
     phi_xdmffile = os.path.join(tsfolder, "phi_from_tstep_0.xdmf")
 
@@ -78,5 +79,9 @@ if __name__ == "__main__":
         plt.savefig(os.path.join(imgfolder, "phase_{:06d}.png".format(i)))
         plt.close()
         #plt.show()
+
+    if mpi_root:
+        print("now run:")
+        print(f"ffmpeg -framerate 25 -i {imgfolder}/phase_%06d.png -c:v libx264 -pix_fmt yuv420p {imgfolder}/out.mp4")
 
     # h5f.close()
