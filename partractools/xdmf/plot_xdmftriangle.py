@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument("--stop", type=int, default=None, help="Stop id")
     parser.add_argument("-s0", type=float, default=3.0, help="Initial thickness (if applicable)")
     parser.add_argument("--arrows", action="store_true", help="Plot with arrows (if applicable)")
-    parser.add_argument("--phasesep", action="store_true", help="Separate solute in phases")
+    parser.add_argument("--phasesep", type=float, default=0, help="Separate solute in phases (>/< 0)")
     return parser.parse_args()
 
 def trim_path(path):
@@ -199,6 +199,7 @@ if __name__ == "__main__":
         posft, cat = posf[tL]
         with h5py.File(posft, "r") as h5f:
             pts = h5f[cat]["points"][:][:, :2]
+            phi = h5f[cat]["rho"][:, 0]
             if has_edges:
                 edges = h5f[cat]["edges"][:]
                 dl = h5f[cat]["dl"][:]
@@ -219,6 +220,10 @@ if __name__ == "__main__":
         #ax_[2].tripcolor(triang, p, shading="gouraud")
         ax.tricontourf(triang, c, levels=levels, colors=colors)
 
+        #if args.phasesep != 0:
+        #    c_intp = tri.LinearTriInterpolator(triang, c)
+        #    c_intp_vals = c_intp(pts[:, 0], pts[:, 1])
+        
         if has_edges:
             cvnorm = plt.Normalize(logrho_min, logrho_max)
 
@@ -230,24 +235,37 @@ if __name__ == "__main__":
                 for v1, v2, ie in line:
                     x1 = pts[v1, :]
                     x2 = pts[v2, :]
+                    inside_domain = True
+                    if args.phasesep < 0:
+                        inside_domain = phi[v1] < 0 and phi[v2] < 0
+                        #    inside_domain = c_intp_vals[v1] < 0 and c_intp_vals[v2] < 0
+                    elif args.phasesep > 0:
+                        inside_domain = phi[v1] > 0 and phi[v2] > 0
+                        #    inside_domain = c_intp_vals[v1] > 0 and c_intp_vals[v2] > 0
 
-                    rho = dl[ie, 0] / dl0[ie, 0]
+                    if inside_domain:
+                        rho = dl[ie, 0] / dl0[ie, 0]
 
-                    cell_1 = tuple([int(ind) for ind in np.floor( (x1[:] - xy_min[:]) / (xy_max[:] - xy_min[:]))])
-                    cell_2 = tuple([int(ind) for ind in np.floor( (x2[:] - xy_min[:]) / (xy_max[:] - xy_min[:]))])
-                    cells = set({cell_1, cell_2})
+                        cell_1 = tuple([int(ind) for ind in np.floor( (x1[:] - xy_min[:]) / (xy_max[:] - xy_min[:]))])
+                        cell_2 = tuple([int(ind) for ind in np.floor( (x2[:] - xy_min[:]) / (xy_max[:] - xy_min[:]))])
+                        cells = set({cell_1, cell_2})
 
-                    for indi, indj in cells:
-                        dx = np.array([indi*Lx, indj*Ly])
-                        segs.append([x1-dx, x2-dx])
-                        lws.append(args.s0/rho)
-                        cvs.append(np.log(rho))
+                        for indi, indj in cells:
+                            dx = np.array([indi*Lx, indj*Ly])
+                            segs.append([x1-dx, x2-dx])
+                            lws.append(args.s0/rho)
+                            cvs.append(np.log(rho))
 
-            lc = LineCollection(segs, cmap='inferno', norm=cvnorm) #, linewidths=lws) # linewidths=lwidths)
+            lc = LineCollection(segs, cmap='inferno', norm=cvnorm, zorder=3) #, linewidths=lws) # linewidths=lwidths)
             lc.set_array(cvs)
             #lc.set_linewidth(lws)
             #lc.set_linewidth(args.s0)
             ax.add_collection(lc)
+
+            #if args.phasesep < 0:
+            #    ax.tricontourf(triang, c, levels=levels[:-1], colors=colors[:-1], zorder=10)
+            #elif args.phasesep > 0:
+            #    ax.tricontourf(triang, c, levels=levels[1:], colors=colors[1:], zorder=10)
         else:
             # print(pts.shape, w.shape)
             wnorm = plt.Normalize(w_min, w_max)

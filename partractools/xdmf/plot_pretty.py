@@ -22,7 +22,7 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
 
-    tsfolder = os.path.join(args.input_folder, "Timeseries")
+    tsfolder = args.input_folder
     imgfolder = os.path.join(tsfolder, "Images")
     if mpi_root and not os.path.exists(imgfolder):
         os.makedirs(imgfolder)
